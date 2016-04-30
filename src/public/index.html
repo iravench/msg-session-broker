@@ -1,0 +1,54 @@
+<script src="/socket.io-1.4.5.js"></script>
+<script src="/jquery-2.2.3.min.js"></script>
+<script>
+  // grab user_id and device_id from url for simulating different users
+  var user_id = getURIParameter("user_id") || "pink";
+  var device_id = getURIParameter("device_id") || "iphone-xxxxx-xxxx-xxxx";
+  var data = {
+    user: { user_id: user_id, device_id: device_id }
+  };
+
+  // grab token and front machine ip from msg-session-broker
+  $.ajax({
+    type: "POST",
+    url: "http://" + window.location.host + "/v1/tickets", // points to msg-session-broker
+    data: data,
+    dataType: "json",
+    success: function(data) {
+      var fm_ip = data.fm_ip;
+      var fm_port = data.fm_port;
+      var token = data.token;
+
+      setupSocketIo(fm_ip, fm_port, token);
+    }
+  });
+
+  function getURIParameter(name, url) {
+    if (!url) url = location.href;
+    name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+    var regexS = "[\\?&]"+name+"=([^&#]*)";
+    var regex = new RegExp( regexS );
+    var results = regex.exec( url );
+    return results == null ? null : results[1];
+  }
+
+  function setupSocketIo(fm_ip, fm_port, token) {
+    var socket = io.connect('http://' + fm_ip + ':' + fm_port);
+    socket
+    .on('connect', function () {
+      socket
+      .on('authenticated', function () {
+        // stuff you want to do when the socket is authenticated
+        socket.on('hello', function (data) {
+          console.log(data);
+          socket.emit('howdy', { data: "I am fine." });
+        });
+      })
+      .on('unauthorized', function (error) {
+        // stuff you want to do when not authenticated, like token expiry, invalid, etc.
+        console.log('unauthorized', error);
+      })
+      .emit('authenticate', { token: token });
+    });
+  }
+</script>
