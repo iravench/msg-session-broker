@@ -1,4 +1,4 @@
-<script src="/socket.io-1.4.5.js"></script>
+<script src="/primus.js"></script>
 <script src="/jquery-2.2.3.min.js"></script>
 <script>
   // grab user_id and device_id from url for simulating different users
@@ -19,7 +19,7 @@
       var fm_port = data.fm_port;
       var token = data.token;
 
-      setupSocketIo(fm_ip, fm_port, token);
+      setupPrimus(fm_ip, fm_port, token);
     }
   });
 
@@ -32,23 +32,25 @@
     return results == null ? null : results[1];
   }
 
-  function setupSocketIo(fm_ip, fm_port, token) {
-    var socket = io.connect('http://' + fm_ip + ':' + fm_port);
-    socket
-    .on('connect', function () {
-      socket
-      .on('authenticated', function () {
-        // stuff you want to do when the socket is authenticated
-        socket.on('hello', function (data) {
+  function setupPrimus(fm_ip, fm_port, token) {
+    var primus = Primus.connect('http://' + fm_ip + ':' + fm_port, {
+        mirage: token,
+        strategy: [ 'online', 'timeout', 'disconnect' ] })
+    primus
+    .on('open', function () {
+      primus
+      .on('mkm::auth::successful', function () {
+        console.log('authorized');
+        // stuff you want to do when token authenticated
+        primus.on('hello', function (data) {
           console.log(data);
-          socket.emit('howdy', { data: "I am fine." });
+          primus.send('howdy', { data: "I am fine." });
         });
       })
-      .on('unauthorized', function (error) {
-        // stuff you want to do when not authenticated, like token expiry, invalid, etc.
+      .on('mkm::auth::fail', function (error) {
         console.log('unauthorized', error);
-      })
-      .emit('authenticate', { token: token });
+        // request a new token, etc.
+      });
     });
   }
 </script>
