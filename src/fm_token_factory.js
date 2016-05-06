@@ -1,17 +1,17 @@
-'use strict';
+'use strict'
 
-import config from './config';
+import config from './config'
 import logger from './utils/logger'
 
-const log = logger.child({module: 'fm_token_factory'});
+const log = logger.child({module: 'fm_token_factory'})
 
 export default function(opts) {
-  const defaults = config.jwt;
+  const defaults = config.jwt
   const options = Object.assign({}, defaults, opts)
-  const { impl } = options;
+  const { impl } = options
 
   function handleValidation(payload) {
-    if (!payload) throw new Error('empty payload');
+    if (!payload) throw new Error('empty payload')
 
     // other validations
   }
@@ -20,15 +20,15 @@ export default function(opts) {
     generate: function(payload) {
       return new Promise((resolve) => {
 
-        handleValidation(payload);
+        handleValidation(payload)
 
-        log.debug('signing payload');
+        log.debug('signing payload')
         return impl.sign(payload, options).then(
           (token) => {
-            log.debug('signed token generated');
-            return resolve(token);
-          });
-      });
+            log.debug('signed token generated')
+            return resolve(token)
+          })
+      })
     }
-  };
+  }
 }

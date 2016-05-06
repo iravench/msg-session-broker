@@ -1,19 +1,19 @@
-'use strict';
+'use strict'
 
 function isDebug() {
-  const debug = process.env.DEBUG;
+  const debug = process.env.DEBUG
   if (debug) {
-    if (debug == 'false' || debug == '0') return false;
-    return true;
+    if (debug == 'false' || debug == '0') return false
+    return true
   }
-  return false;
+  return false
 }
 
-const env = process.env.NODE_ENV || "development";
-const debug = isDebug();
-const secret = process.env.JWT_SECRET || "1234567890";
-const redis_ip = process.env.REDIS_IP || "192.168.99.100";
-const mysql_ip = process.env.MYSQL_IP || "192.168.99.100";
+const env = process.env.NODE_ENV || "development"
+const debug = isDebug()
+const secret = process.env.JWT_SECRET || "1234567890"
+const redis_ip = process.env.REDIS_IP || "192.168.99.100"
+const mysql_ip = process.env.MYSQL_IP || "192.168.99.100"
 
 export default {
   env: env,
@@ -25,8 +25,7 @@ export default {
     expiresIn: 300,          // expiration of the token. 300 in seconds, or 2 days, 10h, 7d
     audience: "ibc",         // target the token is issued for
     subject: "fm auth",      // subject the token is issued for
-    issuer: "bex msg",       // issuer of the token
-    headers: { role: 'dir' } // custom information
+    issuer: "bex msg"        // issuer of the token
   },
   storage: {
     redis: {
@@ -47,4 +46,4 @@ export default {
   policy: {
   },
   port: 8080
-};
+}
