@@ -29,7 +29,6 @@ export default {
       fm_selector.allocate(valid_user, valid_conn).then(
         (ticket) => {
           log.debug('new ticket created')
-          console.log(ticket)
           res.json(ticket)
         },
         (err) => {

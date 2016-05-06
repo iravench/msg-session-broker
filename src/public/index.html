@@ -39,7 +39,7 @@
     primus
     .on('open', function () {
       primus
-      .on('mkm::auth::successful', function () {
+      .on('mkm::auth::1', function () {
         console.log('authorized');
         // stuff you want to do when token authenticated
         primus.on('hello', function (data) {
@@ -47,7 +47,7 @@
           primus.send('howdy', { data: "I am fine." });
         });
       })
-      .on('mkm::auth::fail', function (error) {
+      .on('mkm::auth::0', function (error) {
         console.log('unauthorized', error);
         // request a new token, etc.
       });

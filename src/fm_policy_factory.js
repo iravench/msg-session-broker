@@ -1,5 +1,6 @@
 'use strict'
 
+import _ from 'lodash'
 import config from './config'
 import logger from './utils/logger'
 import { NoAvailableFrontMachineError } from './utils/errors'
@@ -14,10 +15,6 @@ export default function(opts) {
   const defaults = config.policy
   const options = Object.assign({}, defaults, opts)
   const { repo } = options
-
-  function getRandomIntInclusive(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min
-  }
 
   return {
     // get available front machines
@@ -36,13 +33,15 @@ export default function(opts) {
             //might want to distribute loads among more than 1 candidates
             //might want to take it easy when a fm loads reach certain level
             //might want to prioritize on newly joined fm, fm with much less load, etc.
+            let sorted_fms = result
             log.debug('%s available front machines located', result.length)
-            let fm = result[0]
             if (result.length > 1) {
-              fm = result[getRandomIntInclusive(0, result.length)]
+              sorted_fms = _.sortBy(result, ['load'], ['asc'])
             }
 
-            return fm;
+            log.debug('the least loaded fm is %s with load %s', sorted_fms[0].id, sorted_fms[0].load)
+            delete sorted_fms[0].load
+            return sorted_fms[0];
           } else {
             throw new NoAvailableFrontMachineError()
           }

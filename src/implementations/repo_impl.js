@@ -1,13 +1,25 @@
 'use strict'
 
-import mysql from 'mysql'
 import config from '../config'
+import mysql from 'mysql'
+import Redis from 'ioredis'
 import logger from '../utils/logger'
 import { StorageError } from '../utils/errors'
 
 const log = logger.child({module: 'repo_impl'})
 //TBD should probably inject a pool instance so that we can do unit testing...
 const pool = mysql.createPool(config.storage.mysql)
+const redisOptions = {
+  family: config.storage.redis.family,
+  password: config.storage.redis.password,
+  db: config.storage.redis.db
+}
+const redis = new Redis(config.storage.redis.port, config.storage.redis.host, redisOptions)
+
+// TBD prepare redis keys, set in config
+const rkeyNamespace = 'mkm:fm_register:'
+const rkeyFmPrefix = rkeyNamespace + 'fm:'
+const rkeyFms = rkeyNamespace + 'fms'
 
 // how can we store this data in redis?
 //
@@ -42,7 +54,6 @@ const pool = mysql.createPool(config.storage.mysql)
 
 const selectSessionQuery = 'select id, policy from session where user_id=? and device_id=?'
 const insertNewSessionQuery = 'insert into session (user_id, device_id) values (?, ?)'
-const selectFmRegistrationQuery = 'select id, ip, port from fm_registration'
 
 function handleMySQLError(reject, err, err_msg) {
   log.error(err)
@@ -60,6 +71,64 @@ function mysqlPromise(handler) {
       log.debug('mysql connection established')
       handler(connection, resolve, reject)
     })
+  })
+}
+
+function fmHgetallPromise(fm_id) {
+  let err_msg = 'error querying fm detail data'
+
+  return new Promise((resolve, reject) => {
+    redis.hgetall(rkeyFmPrefix + fm_id, (err, fm) => {
+      if (err) return handleMySQLError(reject, err, err_msg)
+      return resolve(fm)
+    })
+  })
+}
+
+function fmAllPromise(fm_ids) {
+  let err_msg = 'error querying all fm detail data'
+
+  return new Promise((resolve, reject) => {
+    let fmPromises = []
+    fm_ids.forEach((fm_id) => {
+      fmPromises.push(fmHgetallPromise(fm_id))
+    })
+    return Promise.all(fmPromises).then(
+      (fms) => {
+        return resolve(fms)
+      },
+      (err) => {
+        if (err) return handleMySQLError(reject, err, err_msg)
+      })
+  })
+}
+
+function fmCountGetPromise(fm_id) {
+  let err_msg = 'error querying fm connection count data'
+
+  return new Promise((resolve, reject) => {
+    redis.get(rkeyNamespace + fm_id + ':count', (err, count) => {
+      if (err) return handleMySQLError(reject, err, err_msg)
+      return resolve({ id: fm_id, load: count })
+    })
+  })
+}
+
+function fmCountAllPromise(fm_ids) {
+  let err_msg = 'error querying all fm connection count data'
+
+  return new Promise((resolve, reject) => {
+    let fmPromises = []
+    fm_ids.forEach((fm_id) => {
+      fmPromises.push(fmCountGetPromise(fm_id))
+    })
+    return Promise.all(fmPromises).then(
+      (fms) => {
+        return resolve(fms)
+      },
+      (err) => {
+        if (err) return handleMySQLError(reject, err, err_msg)
+      })
   })
 }
 
@@ -103,21 +172,30 @@ export default {
   get_fm_registrations: function() {
     let err_msg = 'error querying storage for front machine registration data'
 
-    return mysqlPromise((connection, resolve, reject) => {
-      log.debug('querying front machine registration data')
-      connection.query(selectFmRegistrationQuery, (err, result) => {
+    return new Promise((resolve, reject) => {
+      redis.smembers(rkeyFms, (err, fm_ids) => {
         if (err) return handleMySQLError(reject, err, err_msg)
 
-        if (result.length >= 0) {
-          log.debug('front machine registration data retrieved')
-          resolve(result)
+        if (fm_ids && fm_ids.length >= 0) {
+          return Promise.all([
+            fmAllPromise(fm_ids),
+            fmCountAllPromise(fm_ids)]).then(
+              (combo) => {
+                log.debug('front machine registration data retrieved')
+                // TBD please fix me...
+                for (let i=0; i<combo[0].length; i++) {
+                  combo[0][i].load = combo[1][i].load
+                }
+                return resolve(combo[0])
+              },
+              (err) => {
+                if (err) return handleMySQLError(reject, err, err_msg)
+              })
         }
         else {
           log.debug('front machine registration data not found')
           resolve(null)
         }
-
-        connection.release()
       })
     })
   }
