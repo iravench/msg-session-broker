@@ -46,6 +46,9 @@
           console.log(data);
           primus.send('howdy', { data: "I am fine." });
         });
+        primus.on('mkm::msg::ibc::broadcast', function(data) {
+          console.log(data);
+        });
       })
       .on('mkm::auth::0', function (error) {
         console.log('unauthorized', error);
