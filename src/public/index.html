@@ -49,6 +49,9 @@
         primus.on('mkm::msg::ibc::broadcast', function(data) {
           console.log(data);
         });
+        primus.on('mkm::msg::ibc::personal', function(data) {
+          console.log(data);
+        });
       })
       .on('mkm::auth::0', function (error) {
         console.log('unauthorized', error);
