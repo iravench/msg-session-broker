@@ -36,7 +36,7 @@ export default function(opts) {
             let sorted_fms = result
             log.debug('%s available front machines located', result.length)
             if (result.length > 1) {
-              sorted_fms = _.sortBy(result, ['load'], ['asc'])
+              sorted_fms = _.orderBy(result, ['load'], ['asc'])
             }
 
             log.debug('the least loaded fm is %s with load %s', sorted_fms[0].id, sorted_fms[0].load)

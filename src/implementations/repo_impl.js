@@ -184,7 +184,7 @@ export default {
                 log.debug('front machine registration data retrieved')
                 // TBD please fix me...
                 for (let i=0; i<combo[0].length; i++) {
-                  combo[0][i].load = combo[1][i].load
+                  combo[0][i].load = combo[1][i].load || 0
                 }
                 return resolve(combo[0])
               },
