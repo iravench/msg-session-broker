@@ -19,7 +19,9 @@ export default function(opts) {
   return {
     // get available front machines
     // check known servers' current load or latest cached load status
-    // opts might contain other flags for user/conn, for example certain user might be blocked
+    // opts might contain other flags for user/conn,
+    // for example certain user might be blocked
+    // or some users are preferred to be allocated to the same front machine
     get_fm: function(user, conn, session) {
       log.debug('getting registered front machine list')
       return repo.get_registered_fms().then(

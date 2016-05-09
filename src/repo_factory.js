@@ -17,24 +17,23 @@ export default function(opts) {
     allocate_session: function(user) {
       let err_msg = 'error allocating session record'
 
-      log.debug('getting session record')
-      return impl.get_session(user).then(
+      let ok = impl.get_session(user).then((session) => {
+        if (session) {
+          log.debug('session record found')
+          return session
+        }
+        else {
+          return impl.create_session(user).then(
+            (session) => {
+              log.debug('session record created')
+              return session
+            })
+        }
+      })
+
+      return ok.then(
         (session) => {
-          if (session) {
-            log.debug('session record found')
-            return session
-          }
-          else {
-            log.debug('creating new session record')
-            return impl.create_session(user).then(
-              (session) => {
-                log.debug('session record created')
-                return session
-              },
-              (err) => {
-                handleStorageError(err, err_msg)
-              })
-          }
+          return session
         },
         (err) => {
           handleStorageError(err, err_msg)
@@ -43,7 +42,6 @@ export default function(opts) {
     get_registered_fms: function() {
       let err_msg = 'error getting registered front machine records'
 
-      log.debug('getting registered front machine records')
       return impl.get_fm_registrations().then(
         (result) => {
           if (!result || result.length <= 0) {

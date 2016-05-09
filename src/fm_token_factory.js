@@ -19,7 +19,6 @@ export default function(opts) {
   return {
     generate: function(payload) {
       return new Promise((resolve) => {
-
         handleValidation(payload)
 
         log.debug('signing payload')

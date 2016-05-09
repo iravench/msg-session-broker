@@ -19,6 +19,7 @@ export default {
   env: env,
   debug: debug,
   applicationName: "msg-session-broker",
+  port: 8080,
   jwt: {
     algorithm: 'HS256',      // signature and hash algorithm
     secret: secret,          // secret for signature signing and verification. can be replaced with certificate.
@@ -44,6 +45,5 @@ export default {
     }
   },
   policy: {
-  },
-  port: 8080
+  }
 }

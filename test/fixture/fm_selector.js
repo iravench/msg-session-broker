@@ -2,7 +2,7 @@
 
 const valid_user = { user_id: 'user_id', device_id: 'device_id' };
 const valid_conn = { ip: '192.168.1.111' };
-const fm  = { id: 'fm-1', ip: '111.111.111.111' };
+const fm  = { id: 'fm-1', ip: '111.111.111.111', port: 8080 };
 const token = 'some token';
 
 export default {

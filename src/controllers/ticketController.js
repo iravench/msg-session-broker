@@ -28,11 +28,10 @@ export default {
       // TBD validation should be extracted out of fm_selector since it's the controller's job
       fm_selector.allocate(valid_user, valid_conn).then(
         (ticket) => {
-          log.debug('new ticket created')
+          log.debug({ ticket: ticket }, 'new ticket created')
           res.json(ticket)
         },
         (err) => {
-          //TBD might want to extract this into a middleware
           log.warn(err)
           let status = 500
           if (err instanceof ValidationError) status = 400
