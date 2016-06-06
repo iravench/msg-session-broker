@@ -17,21 +17,7 @@ export default function(opts) {
     allocate_session: function(user) {
       let err_msg = 'error allocating session record'
 
-      let ok = impl.get_session(user).then((session) => {
-        if (session) {
-          log.debug('session record found')
-          return session
-        }
-        else {
-          return impl.create_session(user).then(
-            (session) => {
-              log.debug('session record created')
-              return session
-            })
-        }
-      })
-
-      return ok.then(
+      return impl.alloc_session(user).then(
         (session) => {
           return session
         },

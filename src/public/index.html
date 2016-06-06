@@ -39,21 +39,27 @@
     primus
     .on('open', function () {
       primus
-      .on('mkm::auth::1', function () {
+      .on('mkm::authorized', function () {
         console.log('authorized');
         // stuff you want to do when token authenticated
         primus.on('hello', function (data) {
           console.log(data);
           primus.send('howdy', { data: "I am fine." });
         });
-        primus.on('mkm::msg::ibc::broadcast', function(data) {
-          console.log(data);
+        primus.on('mkm::ibc::system', function(data) {
+          console.log('category - system:', data);
         });
-        primus.on('mkm::msg::ibc::personal', function(data) {
-          console.log(data);
+        primus.on('mkm::ibc::comment', function(data) {
+          console.log('category - comment:', data);
+        });
+        primus.on('mkm::ibc::favourite', function(data) {
+          console.log('category - favourite:', data);
+        });
+        primus.on('mkm::ibc::misc', function(data) {
+          console.log('category - misc:', data);
         });
       })
-      .on('mkm::auth::0', function (error) {
+      .on('mkm::unauthorized', function (error) {
         console.log('unauthorized', error);
         // request a new token, etc.
       });

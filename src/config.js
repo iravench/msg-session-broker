@@ -1,5 +1,7 @@
 'use strict'
 
+import { execSync } from 'child_process'
+
 function isDebug() {
   const debug = process.env.DEBUG
   if (debug) {
@@ -9,19 +11,29 @@ function isDebug() {
   return false
 }
 
-const env = process.env.NODE_ENV || "development"
+function get_local_vm_ip() {
+  if (env === 'development') {
+    const cmd = 'docker-machine ip local'
+    return execSync(cmd).toString().trim()
+  }
+  return
+}
+
+const env = process.env.NODE_ENV || 'development'
 const debug = isDebug()
-const secret = process.env.JWT_SECRET || "1234567890"
-const redis_ip = process.env.REDIS_IP || "192.168.99.100"
-const mysql_ip = process.env.MYSQL_IP || "192.168.99.100"
+const local_vm_ip = get_local_vm_ip()
+const secret = process.env.JWT_SECRET || '1234567890'
+const port = process.env.PORT || 8080
+const redis_ip = process.env.REDIS_IP || local_vm_ip
+const mysql_ip = process.env.MYSQL_IP || local_vm_ip
 
 export default {
   env: env,
   debug: debug,
   applicationName: "msg-session-broker",
-  port: 8080,
+  port: port,
   jwt: {
-    algorithm: 'HS256',      // signature and hash algorithm
+    algorithm: "HS256",      // signature and hash algorithm
     secret: secret,          // secret for signature signing and verification. can be replaced with certificate.
     expiresIn: 300,          // expiration of the token. 300 in seconds, or 2 days, 10h, 7d
     audience: "ibc",         // target the token is issued for

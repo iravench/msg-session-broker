@@ -21,8 +21,7 @@ const rkeyNamespace = 'mkm:fm_register:'
 const rkeyFmPrefix = rkeyNamespace + 'fm:'
 const rkeyFms = rkeyNamespace + 'fms'
 
-const selectSessionQuery = 'select id, policy from session where user_id=? and device_id=?'
-const insertNewSessionQuery = 'insert into session (user_id, device_id) values (?, ?)'
+const allocSessionQuery = 'call allocSession(?, ?, ?)'
 
 function handleStorageError(reject, err, err_msg) {
   log.error(err)
@@ -102,35 +101,16 @@ function getAllFmCountPromise(fm_ids) {
 }
 
 export default {
-  get_session(user) {
-    let err_msg = 'error querying storage for session data'
+  alloc_session: function(user) {
+    let err_msg = 'error updating storage for allocating session data'
 
     return mysqlPromise((connection, resolve, reject) => {
-      connection.query(selectSessionQuery, [user.user_id, user.device_id], (err, rows) => {
+      connection.query(allocSessionQuery, [user.user_id, user.device_id, ''], (err, result) => {
         if (err) return handleStorageError(reject, err, err_msg)
 
-        if (rows.length > 0) {
-          log.debug('session data of id %s retrieved', rows[0].id)
-          resolve(rows[0])
-        }
-        else {
-          log.debug('session data not found')
-          resolve(null)
-        }
-
-        connection.release()
-      })
-    })
-  },
-  create_session: function(user) {
-    let err_msg = 'error updating storage for setting up new session data'
-
-    return mysqlPromise((connection, resolve, reject) => {
-      connection.query(insertNewSessionQuery, [user.user_id, user.device_id], (err, result) => {
-        if (err) return handleStorageError(reject, err, err_msg)
-
-        log.debug('new session data of id %s set', result.insertId)
-        resolve({ id: result.insertId })
+        const session_id = result[0][0].o_id
+        log.debug('allocated session data of id %s', session_id)
+        resolve({ id: session_id })
 
         connection.release()
       })

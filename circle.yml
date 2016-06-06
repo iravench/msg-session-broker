@@ -1,0 +1,27 @@
+machine:
+  pre:
+    - sudo curl -L -o /usr/bin/docker 'https://s3-external-1.amazonaws.com/circle-downloads/docker-1.11.1-circleci'
+    - sudo chmod 0755 /usr/bin/docker
+  services:
+    - docker
+
+dependencies:
+  override:
+    - make build
+
+database:
+  override:
+    - /bin/true
+
+test:
+  override:
+    - docker run --name broker iravench/msg-session-broker ./scripts/env/test.sh ./scripts/run_test.sh
+
+deployment:
+  prod:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push iravench/msg-session-broker:latest
+      - docker tag iravench/msg-session-broker:latest iravench/yum_cake:$CIRCLE_SHA1
+      - docker push iravench/msg-session-broker:$CIRCLE_SHA1
